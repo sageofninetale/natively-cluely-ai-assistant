@@ -7,7 +7,9 @@ import { app, safeStorage } from 'electron';
 import fs from 'fs';
 import path from 'path';
 
-const CREDENTIALS_PATH = path.join(app.getPath('userData'), 'credentials.enc');
+function getCredentialsPath(): string {
+  return path.join(app.getPath('userData'), 'credentials.enc');
+}
 
 export interface CustomProvider {
     id: string;
@@ -523,10 +525,10 @@ export class CredentialsManager {
 
     public clearAll(): void {
         this.scrubMemory();
-        if (fs.existsSync(CREDENTIALS_PATH)) {
-            fs.unlinkSync(CREDENTIALS_PATH);
+        if (fs.existsSync(getCredentialsPath())) {
+            fs.unlinkSync(getCredentialsPath());
         }
-        const plaintextPath = CREDENTIALS_PATH + '.json';
+        const plaintextPath = getCredentialsPath() + '.json';
         if (fs.existsSync(plaintextPath)) {
             fs.unlinkSync(plaintextPath);
         }
@@ -562,9 +564,9 @@ export class CredentialsManager {
 
             const data = JSON.stringify(this.credentials);
             const encrypted = safeStorage.encryptString(data);
-            const tmpEnc = CREDENTIALS_PATH + '.tmp';
+            const tmpEnc = getCredentialsPath() + '.tmp';
             fs.writeFileSync(tmpEnc, encrypted);
-            fs.renameSync(tmpEnc, CREDENTIALS_PATH);
+            fs.renameSync(tmpEnc, getCredentialsPath());
         } catch (error) {
             console.error('[CredentialsManager] Failed to save credentials:', error);
         }
@@ -573,13 +575,13 @@ export class CredentialsManager {
     private loadCredentials(): void {
         try {
             // Try encrypted file first
-            if (fs.existsSync(CREDENTIALS_PATH)) {
+            if (fs.existsSync(getCredentialsPath())) {
                 if (!safeStorage.isEncryptionAvailable()) {
                     console.warn('[CredentialsManager] Encryption not available for load');
                     return;
                 }
 
-                const encrypted = fs.readFileSync(CREDENTIALS_PATH);
+                const encrypted = fs.readFileSync(getCredentialsPath());
                 const decrypted = safeStorage.decryptString(encrypted);
                 try {
                     const parsed = JSON.parse(decrypted);
@@ -595,7 +597,7 @@ export class CredentialsManager {
                 }
 
                 // Clean up any leftover plaintext fallback file to eliminate the data leak
-                const plaintextPath = CREDENTIALS_PATH + '.json';
+                const plaintextPath = getCredentialsPath() + '.json';
                 if (fs.existsSync(plaintextPath)) {
                     try {
                         fs.unlinkSync(plaintextPath);
@@ -607,7 +609,7 @@ export class CredentialsManager {
                 return;
             }
 
-            const plaintextPath = CREDENTIALS_PATH + '.json';
+            const plaintextPath = getCredentialsPath() + '.json';
             if (fs.existsSync(plaintextPath)) {
                 try {
                     fs.unlinkSync(plaintextPath);

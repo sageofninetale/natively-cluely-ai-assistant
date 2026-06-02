@@ -1652,7 +1652,7 @@ export function initializeIpcHandlers(appState: AppState): void {
         const orchestrator = appState.getKnowledgeOrchestrator();
         if (orchestrator) {
           orchestrator.setKnowledgeMode(false);
-          const { DocType } = require('../premium/electron/knowledge/types');
+          const { DocType } = require('./knowledge/types');
           orchestrator.deleteDocumentsByType(DocType.RESUME);
           orchestrator.deleteDocumentsByType(DocType.JD);
         }
@@ -1704,7 +1704,7 @@ export function initializeIpcHandlers(appState: AppState): void {
         const orchestrator = appState.getKnowledgeOrchestrator();
         if (orchestrator) {
           orchestrator.setKnowledgeMode(false);
-          const { DocType } = require('../premium/electron/knowledge/types');
+          const { DocType } = require('./knowledge/types');
           orchestrator.deleteDocumentsByType(DocType.RESUME);
           orchestrator.deleteDocumentsByType(DocType.JD);
         }
@@ -4111,14 +4111,6 @@ export function initializeIpcHandlers(appState: AppState): void {
 
   safeHandle('profile:upload-resume', async (_, filePath: string) => {
     try {
-      // Premium gate: require active license or free trial for profile features
-      if (!isProOrTrialActive()) {
-        return {
-          success: false,
-          error:
-            'Pro license required. Please activate a license key to use Profile Intelligence features.',
-        };
-      }
       const resolvedPath = consumeSelectedProfilePath(filePath);
       if (!resolvedPath) {
         console.warn('[IPC] profile:upload-resume rejected: path was not produced by profile:select-file or has expired.');
@@ -4132,7 +4124,7 @@ export function initializeIpcHandlers(appState: AppState): void {
           error: 'Knowledge engine not initialized. Please ensure API keys are configured.',
         };
       }
-      const { DocType } = require('../premium/electron/knowledge/types');
+      const { DocType } = require('./knowledge/types');
       const result = await orchestrator.ingestDocument(resolvedPath, DocType.RESUME);
       return result;
     } catch (error: any) {
@@ -4163,14 +4155,6 @@ export function initializeIpcHandlers(appState: AppState): void {
 
   safeHandle('profile:set-mode', async (_, enabled: boolean) => {
     try {
-      // Premium gate: only allow enabling profile mode with active license or free trial
-      if (enabled && !isProOrTrialActive()) {
-        return {
-          success: false,
-          error:
-            'Pro license required. Please activate a license key to use Profile Intelligence features.',
-        };
-      }
       const orchestrator = appState.getKnowledgeOrchestrator();
       if (!orchestrator) {
         return { success: false, error: 'Knowledge engine not initialized' };
@@ -4192,7 +4176,7 @@ export function initializeIpcHandlers(appState: AppState): void {
       if (!orchestrator) {
         return { success: false, error: 'Knowledge engine not initialized' };
       }
-      const { DocType } = require('../premium/electron/knowledge/types');
+      const { DocType } = require('./knowledge/types');
       orchestrator.deleteDocumentsByType(DocType.RESUME);
       return { success: true };
     } catch (error: any) {
@@ -4235,14 +4219,6 @@ export function initializeIpcHandlers(appState: AppState): void {
 
   safeHandle('profile:upload-jd', async (_, filePath: string) => {
     try {
-      // Premium gate
-      if (!isProOrTrialActive()) {
-        return {
-          success: false,
-          error:
-            'Pro license required. Please activate a license key to use Profile Intelligence features.',
-        };
-      }
       const resolvedPath = consumeSelectedProfilePath(filePath);
       if (!resolvedPath) {
         console.warn('[IPC] profile:upload-jd rejected: path was not produced by profile:select-file or has expired.');
@@ -4256,7 +4232,7 @@ export function initializeIpcHandlers(appState: AppState): void {
           error: 'Knowledge engine not initialized. Please ensure API keys are configured.',
         };
       }
-      const { DocType } = require('../premium/electron/knowledge/types');
+      const { DocType } = require('./knowledge/types');
       const result = await orchestrator.ingestDocument(resolvedPath, DocType.JD);
       return result;
     } catch (error: any) {
@@ -4271,7 +4247,7 @@ export function initializeIpcHandlers(appState: AppState): void {
       if (!orchestrator) {
         return { success: false, error: 'Knowledge engine not initialized' };
       }
-      const { DocType } = require('../premium/electron/knowledge/types');
+      const { DocType } = require('./knowledge/types');
       orchestrator.deleteDocumentsByType(DocType.JD);
       return { success: true };
     } catch (error: any) {

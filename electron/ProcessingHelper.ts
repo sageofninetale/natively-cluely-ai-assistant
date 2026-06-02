@@ -6,9 +6,7 @@ import { CredentialsManager } from "./services/CredentialsManager"
 import { app } from "electron"
 // import dotenv from "dotenv" // Removed static import
 
-if (!app.isPackaged) {
-  require("dotenv").config()
-}
+// dotenv loaded lazily in constructor to avoid accessing app before ready
 
 const isDev = process.env.NODE_ENV === "development"
 const isDevTest = process.env.IS_DEV_TEST === "true"
@@ -22,6 +20,10 @@ export class ProcessingHelper {
 
   constructor(appState: AppState) {
     this.appState = appState
+
+    if (!app.isPackaged) {
+      require("dotenv").config()
+    }
 
     // Check if user wants to use Ollama
     const useOllama = process.env.USE_OLLAMA === "true"

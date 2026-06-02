@@ -4,19 +4,21 @@ import { AppState } from './main';
 import { KeybindManager } from './services/KeybindManager';
 
 const isEnvDev = process.env.NODE_ENV === 'development';
-const isPackaged = app.isPackaged;
 const inAppBundle = process.execPath.includes('.app/') || process.execPath.includes('.app\\');
 
-console.log(
-  `[WindowHelper] isEnvDev: ${isEnvDev}, isPackaged: ${isPackaged}, inAppBundle: ${inAppBundle}`,
-);
+function getIsPackaged(): boolean {
+  return app.isPackaged;
+}
 
-// Force production mode if running as packaged app or inside app bundle
-const isDev = isEnvDev && !isPackaged;
+function getIsDev(): boolean {
+  return isEnvDev && !getIsPackaged();
+}
 
-const startUrl = isDev
-  ? 'http://localhost:5180'
-  : `file://${path.join(__dirname, '../../dist/index.html')}`;
+function getStartUrl(): string {
+  return getIsDev()
+    ? 'http://localhost:5180'
+    : `file://${path.join(__dirname, '../../dist/index.html')}`;
+}
 
 export class WindowHelper {
   private launcherWindow: BrowserWindow | null = null;
@@ -232,7 +234,7 @@ export class WindowHelper {
         contextIsolation: true,
         preload: path.join(__dirname, 'preload.js'),
         scrollBounce: true,
-        webSecurity: !isDev, // DEBUG: Disable web security only in dev
+        webSecurity: !getIsDev(), // DEBUG: Disable web security only in dev
       },
       show: false, // DEBUG: Force show -> Fixed white screen, now relies on ready-to-show
       // Platform-specific frame settings
@@ -283,7 +285,7 @@ export class WindowHelper {
     };
 
     console.log(`[WindowHelper] Icon Path: ${launcherSettings.icon}`);
-    console.log(`[WindowHelper] Start URL: ${startUrl}`);
+    console.log(`[WindowHelper] Start URL: ${getStartUrl()}`);
 
     try {
       this.launcherWindow = new BrowserWindow(launcherSettings);
@@ -296,7 +298,7 @@ export class WindowHelper {
     this.launcherWindow.setContentProtection(this.contentProtection);
 
     this.launcherWindow
-      .loadURL(`${startUrl}?window=launcher`)
+      .loadURL(`${getStartUrl()}?window=launcher`)
       .then(() => console.log('[WindowHelper] loadURL success'))
       .catch((e) => {
         console.error('[WindowHelper] Failed to load URL:', e);
@@ -422,7 +424,7 @@ export class WindowHelper {
       this.overlayWindow.setAlwaysOnTop(true, 'screen-saver');
     }
 
-    this.overlayWindow.loadURL(`${startUrl}?window=overlay`).catch((e) => {
+    this.overlayWindow.loadURL(`${getStartUrl()}?window=overlay`).catch((e) => {
       console.error('[WindowHelper] Failed to load Overlay URL:', e);
     });
 

@@ -1,7 +1,7 @@
 {
   "name": "natively",
   "version": "2.7.0",
-  "main": "dist-electron/electron/main.js",
+  "main": "test-main-appmode.js",
   "description": "Natively is a meeting notes app that uses AI to generate notes from your meetings.",
   "scripts": {
     "clean": "rimraf dist dist-electron",

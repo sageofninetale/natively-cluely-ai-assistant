@@ -698,6 +698,21 @@ export class DatabaseManager {
             this.db.pragma('user_version = 16');
         }
 
+        // Version 16 → 17: Add profile_documents table for local resume/JD storage
+        if (version < 17) {
+            console.log('[DatabaseManager] Applying migration v16 → v17: Add profile_documents table');
+            this.db.exec(`
+                CREATE TABLE IF NOT EXISTS profile_documents (
+                    id INTEGER PRIMARY KEY,
+                    doc_type TEXT NOT NULL,
+                    raw_text TEXT NOT NULL,
+                    file_name TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
+            `);
+            this.db.pragma('user_version = 17');
+        }
+
         console.log('[DatabaseManager] Migrations completed.');
     }
 
@@ -755,6 +770,43 @@ export class DatabaseManager {
             this.db.prepare('UPDATE profile_persona SET content = \'\', updated_at = datetime(\'now\') WHERE id = 1').run();
         } catch (e) {
             console.error('[DatabaseManager] clearProfilePersona failed:', e);
+        }
+    }
+
+    // ============================================
+    // Profile Documents (local resume/JD storage)
+    // ============================================
+
+    public saveProfileDocument(docType: string, rawText: string, fileName: string): void {
+        if (!this.db) return;
+        try {
+            this.db.prepare('DELETE FROM profile_documents WHERE doc_type = ?').run(docType);
+            this.db.prepare(
+                'INSERT INTO profile_documents (doc_type, raw_text, file_name) VALUES (?, ?, ?)'
+            ).run(docType, rawText, fileName);
+        } catch (e) {
+            console.error('[DatabaseManager] saveProfileDocument failed:', e);
+        }
+    }
+
+    public getProfileDocument(docType: string): { raw_text: string; file_name: string } | undefined {
+        if (!this.db) return undefined;
+        try {
+            return this.db
+                .prepare('SELECT raw_text, file_name FROM profile_documents WHERE doc_type = ? LIMIT 1')
+                .get(docType) as { raw_text: string; file_name: string } | undefined;
+        } catch (e) {
+            console.error('[DatabaseManager] getProfileDocument failed:', e);
+            return undefined;
+        }
+    }
+
+    public deleteProfileDocument(docType: string): void {
+        if (!this.db) return;
+        try {
+            this.db.prepare('DELETE FROM profile_documents WHERE doc_type = ?').run(docType);
+        } catch (e) {
+            console.error('[DatabaseManager] deleteProfileDocument failed:', e);
         }
     }
 

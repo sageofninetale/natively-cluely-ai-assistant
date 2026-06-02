@@ -3,9 +3,6 @@ import * as crypto from "crypto"
 import path from "path"
 import fs from "fs"
 import { autoUpdater } from "electron-updater"
-if (!app.isPackaged) {
-  require('dotenv').config();
-}
 
 /**
  * Whether THIS build carries a real Developer ID signature.
@@ -1141,6 +1138,31 @@ export class AppState {
         }
 
         console.log('[AppState] KnowledgeOrchestrator initialized');
+      } else {
+        // Premium submodule absent — use the lightweight local orchestrator
+        try {
+          const { LocalKnowledgeOrchestrator } = require('./knowledge/LocalKnowledgeOrchestrator');
+          this.knowledgeOrchestrator = new LocalKnowledgeOrchestrator();
+
+          const llmHelper = this.processingHelper.getLLMHelper();
+          llmHelper.setKnowledgeOrchestrator(this.knowledgeOrchestrator);
+
+          const { SettingsManager } = require('./services/SettingsManager');
+          const sm = SettingsManager.getInstance();
+          if (sm.get('knowledgeMode')) {
+            this.knowledgeOrchestrator.setKnowledgeMode(true);
+          }
+
+          const savedNotes = DatabaseManager.getInstance().getCustomNotes();
+          if (savedNotes) {
+            this.knowledgeOrchestrator.setCustomNotes(savedNotes);
+            llmHelper.setCustomNotes(savedNotes);
+          }
+
+          console.log('[AppState] LocalKnowledgeOrchestrator initialized (open-source mode)');
+        } catch (localErr: any) {
+          console.error('[AppState] Failed to initialize LocalKnowledgeOrchestrator:', localErr);
+        }
       }
     } catch (error) {
       console.error('[AppState] Failed to initialize KnowledgeOrchestrator:', error);
@@ -5214,6 +5236,10 @@ async function initializeApp() {
 
   // 2. Wait for app to be ready
   await app.whenReady()
+
+  if (!app.isPackaged) {
+    require('dotenv').config();
+  }
 
   // 2a. PRE-EMPTIVE dock hide: must happen before ANY operation that causes macOS to
   // register a dock entry (app.setName, BrowserWindow creation, etc.).
