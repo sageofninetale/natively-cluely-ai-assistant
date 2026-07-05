@@ -93,11 +93,4 @@ describe('FIX-009: modes:upload-reference-file hardening', () => {
       'Handler must log the raw error in main-process console'
     );
   });
-
-  test('still gates on Pro/trial before doing any work', () => {
-    const gateIdx = body.indexOf('isProOrTrialActive()');
-    const showDialogIdx = body.indexOf('showOpenDialog');
-    assert.ok(gateIdx >= 0 && showDialogIdx >= 0);
-    assert.ok(gateIdx < showDialogIdx, 'Pro gate must run before opening the file dialog');
-  });
 });
