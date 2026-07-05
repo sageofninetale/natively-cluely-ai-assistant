@@ -4420,7 +4420,6 @@ export function initializeIpcHandlers(appState: AppState): void {
 
   safeHandle('profile:get-persona', async () => {
     try {
-      if (!isProOrTrialActive()) return { success: false, content: '', error: 'pro_required' };
       const content = DatabaseManager.getInstance().getPersona();
       const llmHelper = appState.processingHelper?.getLLMHelper?.();
       if (llmHelper?.setPersonaPrompt) llmHelper.setPersonaPrompt(content);
@@ -4432,7 +4431,6 @@ export function initializeIpcHandlers(appState: AppState): void {
 
   safeHandle('profile:save-persona', async (_, content: string) => {
     try {
-      if (!isProOrTrialActive()) return { success: false, error: 'pro_required' };
       if (typeof content !== 'string') return { success: false, error: 'invalid_persona' };
       const trimmed = content.trim().slice(0, 4000);
       DatabaseManager.getInstance().savePersona(trimmed);

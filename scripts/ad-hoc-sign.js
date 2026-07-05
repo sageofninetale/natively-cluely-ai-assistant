@@ -114,7 +114,7 @@ exports.default = async function (context) {
         // --deep: sign nested code (frameworks, helpers, .dylib, .node)
         // --entitlements: attach entitlements to the top-level app bundle
         // --sign -: ad-hoc signature
-        execSync(`codesign --force --deep ${hardenedOpt}--entitlements "${entitlementsPath}" --sign - "${appPath}"`, { stdio: 'inherit' });
+        execSync(`codesign --force --deep ${hardenedOpt}--entitlements "${entitlementsPath}" --sign "NativelyLocal" "${appPath}"`, { stdio: 'inherit' });
         console.log('[Ad-Hoc Signing] Successfully signed the application with entitlements.');
     } catch (error) {
         console.error('[Ad-Hoc Signing] Failed to sign the application:', error);
@@ -134,7 +134,7 @@ exports.default = async function (context) {
                 const nodePath = path.join(unpackedNativeDir, file);
                 console.log(`[Ad-Hoc Signing] Re-signing ${file} with entitlements (post --deep)...`);
                 try {
-                    execSync(`codesign --force ${hardenedOpt}--entitlements "${entitlementsPath}" --sign - "${nodePath}"`, { stdio: 'inherit' });
+                    execSync(`codesign --force ${hardenedOpt}--entitlements "${entitlementsPath}" --sign "NativelyLocal" "${nodePath}"`, { stdio: 'inherit' });
                 } catch (error) {
                     console.error(`[Ad-Hoc Signing] Failed to sign ${file}:`, error);
                 }

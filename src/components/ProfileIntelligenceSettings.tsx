@@ -846,10 +846,6 @@ export function ProfileIntelligenceSettings({ onClose }: { onClose: () => void }
                                                 <button
                                                     style={{ marginTop: 'auto' }}
                                                     onClick={async () => {
-                                                        if (!hasProfileAccess) {
-                                                            setIsPremiumModalOpen(true);
-                                                            return;
-                                                        }
                                                         setProfileError('');
                                                         try {
                                                             const fileResult = await window.electronAPI?.profileSelectFile?.();
@@ -955,10 +951,6 @@ export function ProfileIntelligenceSettings({ onClose }: { onClose: () => void }
                                                 <button
                                                     style={{ marginTop: 'auto' }}
                                                     onClick={async () => {
-                                                        if (!hasProfileAccess) {
-                                                            setIsPremiumModalOpen(true);
-                                                            return;
-                                                        }
                                                         setJdError('');
                                                         try {
                                                             const fileResult = await window.electronAPI?.profileSelectFile?.();
@@ -1074,7 +1066,7 @@ export function ProfileIntelligenceSettings({ onClose }: { onClose: () => void }
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-2">
                                                             <h4 className="text-sm font-bold text-text-primary">AI Persona</h4>
-                                                            {personaSaved && hasProfileAccess && (
+                                                            {personaSaved && (
                                                                 <span className="text-[9px] font-bold text-emerald-500 px-1.5 py-0.5 bg-emerald-500/10 rounded-full border border-emerald-500/20 uppercase tracking-wide flex items-center gap-1">
                                                                     <Check size={8} /> Updated
                                                                 </span>
@@ -1088,10 +1080,6 @@ export function ProfileIntelligenceSettings({ onClose }: { onClose: () => void }
                                                 <textarea
                                                     value={persona}
                                                     onChange={(e) => {
-                                                        if (!hasProfileAccess) {
-                                                            setIsPremiumModalOpen(true);
-                                                            return;
-                                                        }
                                                         const val = e.target.value;
                                                         if (val.length > 4000) return;
                                                         setPersona(val);
@@ -1103,24 +1091,17 @@ export function ProfileIntelligenceSettings({ onClose }: { onClose: () => void }
                                                                 if (res?.success) {
                                                                     setPersonaSaved(true);
                                                                     setTimeout(() => setPersonaSaved(false), 2000);
-                                                                } else if (res?.error === 'pro_required') {
-                                                                    setPersona('');
-                                                                    setIsPremiumModalOpen(true);
                                                                 }
                                                             } catch (_) {}
                                                         }, 800);
                                                     }}
-                                                    onFocus={() => {
-                                                        if (!hasProfileAccess) setIsPremiumModalOpen(true);
-                                                    }}
                                                     placeholder="Example: You are a senior hiring manager. Keep answers concise and ask one focused follow-up when needed."
                                                     rows={5}
-                                                    disabled={!hasProfileAccess}
-                                                    className={`w-full bg-bg-input border border-border-subtle rounded-lg px-3 py-2.5 text-xs text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary/50 focus:ring-1 focus:ring-accent-primary/20 transition-all resize-none leading-relaxed ${!hasProfileAccess ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                                    className={`w-full bg-bg-input border border-border-subtle rounded-lg px-3 py-2.5 text-xs text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent-primary/50 focus:ring-1 focus:ring-accent-primary/20 transition-all resize-none leading-relaxed`}
                                                 />
                                                 <div className="flex items-center justify-between px-0.5 mt-3">
                                                     <p className="text-[10px] text-text-tertiary">
-                                                        {hasProfileAccess ? 'Auto-saved · Treated as user-provided context' : 'Upgrade to Pro to personalize AI persona'}
+                                                        Auto-saved · Treated as user-provided context
                                                     </p>
                                                     <span className={`text-[10px] tabular-nums ${persona.length > 3600 ? 'text-amber-500' : 'text-text-tertiary'}`}>
                                                         {persona.length}/4000
