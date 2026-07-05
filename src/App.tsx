@@ -24,7 +24,6 @@ import {
   ProfileFeatureToaster,
   PremiumPromoToaster,
   RemoteCampaignToaster,
-  PremiumUpgradeModal,
   NativelyApiPromoToaster,
   MaxUltraUpgradeToaster,
   useAdCampaigns
@@ -119,7 +118,6 @@ const App: React.FC = () => {
     setIsSettingsOpen(false);
     setIsModesOpen(true);
   }, []);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [isPremiumActive, setIsPremiumActive] = useState(false);
   const [hasLoadedLicense, setHasLoadedLicense] = useState(false);
   const [planDetails, setPlanDetails] = useState<{ isPremium: boolean; plan?: string; provider?: string }>({ isPremium: false });
@@ -845,16 +843,12 @@ const App: React.FC = () => {
           <PremiumPromoToaster
             isOpen={activeAd === 'promo'}
             onDismiss={dismissAd}
-            onUpgrade={() => {
-              setShowPremiumModal(true);
-            }}
+            onUpgrade={() => dismissAd('promo')}
           />
           <MaxUltraUpgradeToaster
             isOpen={activeAd === 'max_ultra_upgrade'}
             onDismiss={dismissAd}
-            onUpgrade={() => {
-              setShowPremiumModal(true);
-            }}
+            onUpgrade={() => dismissAd('max_ultra_upgrade')}
           />
 
           {/* Remote Campaigns Render Logic (Commented out)
@@ -866,28 +860,6 @@ const App: React.FC = () => {
           */}
         </>
       )}
-
-      <PremiumUpgradeModal
-        isOpen={showPremiumModal}
-        onClose={() => setShowPremiumModal(false)}
-        isPremium={isPremiumActive}
-        onActivated={() => {
-          setIsPremiumActive(true);
-          // Refresh full plan details after activation so ad targeting reflects the new plan
-          window.electronAPI?.licenseGetDetails?.()
-            .then(d => setPlanDetails(d ?? { isPremium: true }))
-            .catch(() => setPlanDetails({ isPremium: true }));
-          setShowPremiumModal(false);
-          // If user activated during post-trial modal, close it — they have a plan now
-          setShowTrialExpiredModal(false);
-          setActiveTrial(null);
-          // After activation, open settings to Profile Intelligence
-          setTimeout(() => {
-            openProfileExclusive();
-          }, 300);
-        }}
-        onDeactivated={() => { setIsPremiumActive(false); setPlanDetails({ isPremium: false }); }}
-      />
     </div>
     </ErrorBoundary>
   )
