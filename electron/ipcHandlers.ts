@@ -34,33 +34,6 @@ export function initializeIpcHandlers(appState: AppState): void {
     ipcMain.on(channel, listener);
   };
 
-  /**
-   * Returns true if the user has an active premium license OR an unexpired free trial.
-   * Used to gate profile intelligence features (resume upload, JD upload, company research, etc.).
-   */
-  const isProOrTrialActive = (): boolean => {
-    // 1. Full premium license (Dodo / Gumroad / Natively API subscription)
-    try {
-      const { LicenseManager } = require('../premium/electron/services/LicenseManager');
-      if (LicenseManager.getInstance().isPremium()) return true;
-    } catch {
-      /* premium module not available */
-    }
-
-    // 2. Active free trial (token present and not expired)
-    try {
-      const { CredentialsManager } = require('./services/CredentialsManager');
-      const cm = CredentialsManager.getInstance();
-      const token = cm.getTrialToken();
-      if (!token) return false;
-      const expiresAt = cm.getTrialExpiresAt();
-      if (!expiresAt) return false;
-      return new Date(expiresAt).getTime() > Date.now();
-    } catch {
-      return false;
-    }
-  };
-
   // Clears premium-only context when the pro license is lost.
   const clearActiveModeOnLicenseLoss = (): void => {
     try {
@@ -4257,14 +4230,6 @@ export function initializeIpcHandlers(appState: AppState): void {
 
   safeHandle('profile:research-company', async (_, companyName: string) => {
     try {
-      // Premium gate
-      if (!isProOrTrialActive()) {
-        return {
-          success: false,
-          error:
-            'Pro license required. Please activate a license key to use Profile Intelligence features.',
-        };
-      }
       const orchestrator = appState.getKnowledgeOrchestrator();
       if (!orchestrator) {
         return { success: false, error: 'Knowledge engine not initialized' };
@@ -4324,14 +4289,6 @@ export function initializeIpcHandlers(appState: AppState): void {
 
   safeHandle('profile:generate-negotiation', async (_, force: boolean = false) => {
     try {
-      // Premium gate
-      if (!isProOrTrialActive()) {
-        return {
-          success: false,
-          error:
-            'Pro license required. Please activate a license key to use Profile Intelligence features.',
-        };
-      }
       const orchestrator = appState.getKnowledgeOrchestrator();
       if (!orchestrator) {
         return { success: false, error: 'Knowledge engine not initialized' };
@@ -4529,7 +4486,6 @@ export function initializeIpcHandlers(appState: AppState): void {
 
   safeHandle('modes:create', async (_, params: { name: string; templateType: string }) => {
     try {
-      if (!isProOrTrialActive()) return { success: false, error: 'pro_required' };
       const { ModesManager } = require('./services/ModesManager');
       const mode = ModesManager.getInstance().createMode({
         name: params.name,
@@ -4552,17 +4508,6 @@ export function initializeIpcHandlers(appState: AppState): void {
       try {
         const { ModesManager } = require('./services/ModesManager');
         const mgr = ModesManager.getInstance();
-        // Gate: changing templateType to a non-general template requires pro.
-        // Also gate if the existing mode is already non-general (editing a pro mode requires pro).
-        if (!isProOrTrialActive()) {
-          if (updates.templateType && updates.templateType !== 'general') {
-            return { success: false, error: 'pro_required' };
-          }
-          const existing = mgr.getModes().find((m: any) => m.id === id);
-          if (existing && existing.templateType !== 'general') {
-            return { success: false, error: 'pro_required' };
-          }
-        }
         mgr.updateMode(id, updates);
         return { success: true };
       } catch (e: any) {
@@ -4574,7 +4519,6 @@ export function initializeIpcHandlers(appState: AppState): void {
 
   safeHandle('modes:delete', async (_, id: string) => {
     try {
-      if (!isProOrTrialActive()) return { success: false, error: 'pro_required' };
       const { ModesManager } = require('./services/ModesManager');
       ModesManager.getInstance().deleteMode(id);
       return { success: true };
@@ -4586,16 +4530,6 @@ export function initializeIpcHandlers(appState: AppState): void {
 
   safeHandle('modes:set-active', async (_, id: string | null) => {
     try {
-      // Allow clearing (null) or setting general mode without pro; all other modes require pro
-      if (id !== null) {
-        const { ModesManager } = require('./services/ModesManager');
-        const targetMode = ModesManager.getInstance()
-          .getModes()
-          .find((m: any) => m.id === id);
-        if (targetMode && targetMode.templateType !== 'general' && !isProOrTrialActive()) {
-          return { success: false, error: 'pro_required' };
-        }
-      }
       const { ModesManager } = require('./services/ModesManager');
       // BUG-MODE-BLEEDING fix: clear mode-specific session context BEFORE switching modes
       // so Interview mode resume/JD context doesn't bleed into the new mode's responses.
@@ -4660,7 +4594,6 @@ export function initializeIpcHandlers(appState: AppState): void {
 
   safeHandle('modes:upload-reference-file', async (_, modeId: string) => {
     try {
-      if (!isProOrTrialActive()) return { success: false, error: 'pro_required' };
       // Server-side allow-list. The dialog filter is a hint to users — never
       // trust it for validation, since the user can rename a file or the
       // filter can be bypassed by selecting "All Files" in the dialog UI.
@@ -4844,7 +4777,6 @@ export function initializeIpcHandlers(appState: AppState): void {
 
   safeHandle('modes:delete-reference-file', async (_, id: string) => {
     try {
-      if (!isProOrTrialActive()) return { success: false, error: 'pro_required' };
       const { ModesManager } = require('./services/ModesManager');
       ModesManager.getInstance().deleteReferenceFile(id);
       return { success: true };
@@ -4870,7 +4802,6 @@ export function initializeIpcHandlers(appState: AppState): void {
     'modes:add-note-section',
     async (_, modeId: string, title: string, description: string) => {
       try {
-        if (!isProOrTrialActive()) return { success: false, error: 'pro_required' };
         const { ModesManager } = require('./services/ModesManager');
         const section = ModesManager.getInstance().addNoteSection({ modeId, title, description });
         return { success: true, section };
@@ -4885,7 +4816,6 @@ export function initializeIpcHandlers(appState: AppState): void {
     'modes:update-note-section',
     async (_, id: string, updates: { title?: string; description?: string }) => {
       try {
-        if (!isProOrTrialActive()) return { success: false, error: 'pro_required' };
         const { ModesManager } = require('./services/ModesManager');
         ModesManager.getInstance().updateNoteSection(id, updates);
         return { success: true };
@@ -4898,7 +4828,6 @@ export function initializeIpcHandlers(appState: AppState): void {
 
   safeHandle('modes:delete-note-section', async (_, id: string) => {
     try {
-      if (!isProOrTrialActive()) return { success: false, error: 'pro_required' };
       const { ModesManager } = require('./services/ModesManager');
       ModesManager.getInstance().deleteNoteSection(id);
       return { success: true };
@@ -4910,7 +4839,6 @@ export function initializeIpcHandlers(appState: AppState): void {
 
   safeHandle('modes:remove-all-note-sections', async (_, modeId: string) => {
     try {
-      if (!isProOrTrialActive()) return { success: false, error: 'pro_required' };
       const { ModesManager } = require('./services/ModesManager');
       ModesManager.getInstance().removeAllNoteSections(modeId);
       return { success: true };
