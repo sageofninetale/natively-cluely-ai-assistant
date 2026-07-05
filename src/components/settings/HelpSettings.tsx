@@ -888,7 +888,7 @@ const SetupGuide = () => {
         </div>
     );
 };
-export const HelpSettings: React.FC<{ onNavigate?: (tab: string) => void }> = ({ onNavigate }) => {
+export const HelpSettings: React.FC = () => {
     const { shortcuts } = useShortcuts();
     const isLight = useResolvedTheme() === 'light';
 
@@ -908,28 +908,6 @@ export const HelpSettings: React.FC<{ onNavigate?: (tab: string) => void }> = ({
             </div>
 
             <div className="flex-1 space-y-2">
-
-                {onNavigate && (
-                    <div
-                        onClick={() => onNavigate('natively-api')}
-                        className="mb-8 group cursor-pointer bg-bg-card hover:bg-bg-item-surface border border-border-subtle hover:border-white transition-all rounded-2xl flex items-center justify-between p-4 px-5 shadow-sm hover:shadow-md"
-                    >
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 flex-1">
-                            <div className="w-10 h-10 shrink-0 rounded-xl bg-bg-item-surface border border-border-subtle flex items-center justify-center group-hover:bg-bg-elevated transition-colors">
-                                <Zap className="w-5 h-5 text-text-primary group-hover:text-white transition-colors" fill="currentColor" />
-                            </div>
-                            <div className="flex-1">
-                                <h4 className="text-[14px] font-bold text-text-primary mb-0.5">Want to skip the manual setup?</h4>
-                                <p className="text-[13px] text-text-secondary">
-                                    Use the <span className="font-semibold text-text-primary">Natively API</span> for an out-of-the-box experience. One-click zero-configuration usage.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="hidden sm:flex self-center ml-4 px-3 py-1.5 rounded-lg bg-text-primary text-bg-main text-[11px] font-bold items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity whitespace-nowrap shrink-0">
-                            Enable Now <ArrowRight size={12} />
-                        </div>
-                    </div>
-                )}
 
                 <SetupGuide />
 
